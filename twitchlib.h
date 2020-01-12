@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.1                    |
+   |  @version: 0.2                    |
    |                                   |  
    +-----------------------------------+
 */
@@ -31,40 +31,58 @@ int msgchannel(int sockfd, const char* channel, const char* message){
   return 0;
 }
 
-int joinchannel(int sockfd, const char* channel, char output){
+int joinchannel(int sockfd, const char* channel, char* output, int length){
   char* payload = (char *)malloc(7+strlen(channel));
-  char buff[1024];
   sprintf(payload, "JOIN %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
     free(payload);
     return -1;
   }
   if(output != NULL){
-    if(read(twitchsock, buff, sizeof(buff))==-1){
+    if(read(sockfd, output, length)==-1){
       free(payload);
       return -1;
     }
-    strncpy(output, buff, sizeof(output));
   }
   free(payload);
-  return 0
+  return 0;
 }
 
-int leavechannel(int sockfd, const char* channel, char output){
+int leavechannel(int sockfd, const char* channel, char* output, int length){
   char* payload = (char *)malloc(7+strlen(channel));
-  char buff[1024];
   sprintf(payload, "PART %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
     free(payload);
     return -1;
   }
   if(output != NULL){
-    if(read(twitchsock, buff, sizeof(buff))==-1){
+    //TODO : read directly into output rather than sticking it in a buffer first
+    if(read(sockfd, output, length)==-1){
       free(payload);
       return -1;
     }
-    strncpy(output, buff, sizeof(output));
   }
   free(payload);
-  return 0
+  return 0;
 }
+
+int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length){
+  char* payload = (char *)malloc(14 + strlen(oauth) + strlen(nick));
+  sprintf(payload, "PASS %s\r\nNICK %s\r\n", oauth, nick);
+
+  if(write(sockfd, payload, strlen(payload))==-1){
+    free(payload);
+    return -1;
+  }
+  
+  if(output!=NULL){
+    if(read(sockfd, output, length)==-1){
+      free(payload);
+      return -1;
+    }
+    printf("%s", output);
+  }
+  free(payload);
+  return 0;
+}
+
