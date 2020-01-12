@@ -18,6 +18,8 @@ currently this library has a couple of callable functions:
 
 - `joinchannel(int sockfd, const char* channel, char output)`
 
+- `leavechannel(int sockfd, const char* channel, char output)`
+
 **Note: you can find more details about these methods in the Wiki section**
 
  

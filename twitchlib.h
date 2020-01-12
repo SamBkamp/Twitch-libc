@@ -49,3 +49,22 @@ int joinchannel(int sockfd, const char* channel, char output){
   free(payload);
   return 0
 }
+
+int leavechannel(int sockfd, const char* channel, char output){
+  char* payload = (char *)malloc(7+strlen(channel));
+  char buff[1024];
+  sprintf(payload, "PART %s\r\n", channel);
+  if(write(sockfd, payload, strlen(payload))==-1){
+    free(payload);
+    return -1;
+  }
+  if(output != NULL){
+    if(read(twitchsock, buff, sizeof(buff))==-1){
+      free(payload);
+      return -1;
+    }
+    strncpy(output, buff, sizeof(output));
+  }
+  free(payload);
+  return 0
+}
