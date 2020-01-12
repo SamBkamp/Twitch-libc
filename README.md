@@ -20,6 +20,8 @@ currently this library has a couple of callable functions:
 
 - `leavechannel(int sockfd, const char* channel, char output)`
 
+- `setupauth(int sockfd, const char* oauth, const char* nick, const char* output, int length)`
+
 **Note: you can find more details about these methods in the Wiki section**
 
  
