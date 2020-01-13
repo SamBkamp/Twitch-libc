@@ -66,6 +66,18 @@ int leavechannel(int sockfd, const char* channel, char* output, int length){
   return 0;
 }
 
+
+int sendrawpacket(int sockfd, char* payload){
+  int payloadlen = strlen(payload);
+  if(payload[payloadlen] != '\n' || payload[payloadlen-1] != '\r'){
+    strcat(payload, "\r\n");
+  }
+  if(write(sockfd, payload, strlen(payload))==-1){
+    return -1;
+  }
+  return 1;
+}
+
 int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length){
   char* payload = (char *)malloc(14 + strlen(oauth) + strlen(nick));
   sprintf(payload, "PASS %s\r\nNICK %s\r\n", oauth, nick);
