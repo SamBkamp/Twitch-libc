@@ -16,9 +16,9 @@ currently this library has a couple of callable functions:
 
 - `msgchannel(int sockfd, const char* channel, const char* message)`
 
-- `joinchannel(int sockfd, const char* channel, char output)`
+- `joinchannel(int sockfd, const char* channel, char output, int length)`
 
-- `leavechannel(int sockfd, const char* channel, char output)`
+- `leavechannel(int sockfd, const char* channel, char output, int length)`
 
 - `setupauth(int sockfd, const char* oauth, const char* nick, const char* output, int length)`
 
