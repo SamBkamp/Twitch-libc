@@ -21,48 +21,40 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string.h>
 
 int msgchannel(int sockfd, const char* channel, const char* message){
-  char* payload = (char *)malloc(12+strlen(channel)+strlen(message));
+  char payload[12+strlen(channel)+strlen(message)];
   sprintf(payload, "PRIVMSG %s :%s\r\n", channel, message);
   if(write(sockfd, payload, strlen(payload))==-1){
-    free(payload);
     return -1;
   }
-  free(payload);
   return 0;
 }
 
 int joinchannel(int sockfd, const char* channel, char* output, int length){
-  char* payload = (char *)malloc(7+strlen(channel));
+  char payload[7+strlen(channel)];
   sprintf(payload, "JOIN %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
-    free(payload);
     return -1;
   }
   if(output != NULL){
     if(read(sockfd, output, length)==-1){
-      free(payload);
       return -1;
     }
   }
-  free(payload);
   return 0;
 }
 
 int leavechannel(int sockfd, const char* channel, char* output, int length){
-  char* payload = (char *)malloc(7+strlen(channel));
+  char payload[7+strlen(channel)];
   sprintf(payload, "PART %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
-    free(payload);
     return -1;
   }
   if(output != NULL){
     //TODO : read directly into output rather than sticking it in a buffer first
     if(read(sockfd, output, length)==-1){
-      free(payload);
       return -1;
     }
   }
-  free(payload);
   return 0;
 }
 
@@ -79,22 +71,19 @@ int sendrawpacket(int sockfd, char* payload){
 }
 
 int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length){
-  char* payload = (char *)malloc(14 + strlen(oauth) + strlen(nick));
+  char payload[14 + strlen(oauth) + strlen(nick)];
   sprintf(payload, "PASS %s\r\nNICK %s\r\n", oauth, nick);
 
   if(write(sockfd, payload, strlen(payload))==-1){
-    free(payload);
     return -1;
   }
   
   if(output!=NULL){
     if(read(sockfd, output, length)==-1){
-      free(payload);
       return -1;
     }
     printf("%s", output);
   }
-  free(payload);
   return 0;
 }
 
