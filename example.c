@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.1                    |
+   |  @version: 0.2                    |
    |                                   |  
    +-----------------------------------+
 */
@@ -24,28 +24,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "twitchlib.h"
 
 int main(){
-  struct sockaddr_in twitchaddr;
-  int twitchsock = socket(AF_INET, SOCK_STREAM, 0);
-  if (twitchsock==-1){
-    printf("FATAL: couldn't create socket\n");
-    return 0;
-  }
-  struct hostent* host = gethostbyname("irc.chat.twitch.tv");
-  if(host == NULL){
-    perror("FATAL: couldn't get host");
-    return 0;
-  }
-  //setup address
-  bzero(&twitchaddr, sizeof(twitchaddr));
-  twitchaddr.sin_family = AF_INET;
-  twitchaddr.sin_addr.s_addr = *(long *)host->h_addr_list[0];
-  twitchaddr.sin_port = htons(6667);
 
-  if(connect(twitchsock, (struct sockaddr*)&twitchaddr, sizeof(twitchaddr)) != 0){
-    perror("FATAL: couldn't connect to server");
+  int twitchsock = twlibc_init();
+
+  if(twitchsock == -1){
+    perror("FATAL: Couldn't initialise socket");
     return 0;
   }
-
+  
   char buffer[1024];
 
   if(twlibc_setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
