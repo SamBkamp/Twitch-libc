@@ -48,19 +48,19 @@ int main(){
 
   char buffer[1024];
 
-  if(setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
+  if(twlibc_setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
     perror("FATAL: Couldn't authenticate with twitch servers");
   }
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(joinchannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_joinchannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
+  if(twlibc_msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
     perror("FATAL: Couldn't send message");
   }
   printf("%s", buffer);
@@ -73,12 +73,12 @@ int main(){
 
   printf("%s", returnString);
 
-  char* senderName = parseSender(returnString);
+  char* senderName = twlibc_parseSender(returnString);
   printf("parsed name is: %s\n", senderName);
   free(senderName);
   
   bzero(buffer, 1024);
-  if(leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
