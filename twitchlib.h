@@ -1,8 +1,8 @@
 #ifndef twitchlib
-int msgchannel(int sockfd, const char* channel, const char* message);
-int joinchannel(int sockfd, const char* channel, char* output, int length);
-int leavechannel(int sockfd, const char* channel, char* output, int length);
-int sendrawpacket(int sockfd, char* payload);
-int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length);
-char* parseSender(char* message);
+int twlibc_msgchannel(int sockfd, const char* channel, const char* message);
+int twlibc_joinchannel(int sockfd, const char* channel, char* output, int length);
+int twlibc_leavechannel(int sockfd, const char* channel, char* output, int length);
+int twlibc_sendrawpacket(int sockfd, char* payload);
+int twlibc_setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length);
+char* twlibc_parseSender(char* message);
 #endif

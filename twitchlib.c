@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <unistd.h>
 #include <string.h>
 
-int msgchannel(int sockfd, const char* channel, const char* message){
+int twlibc_msgchannel(int sockfd, const char* channel, const char* message){
   char payload[12+strlen(channel)+strlen(message)];
   sprintf(payload, "PRIVMSG %s :%s\r\n", channel, message);
   if(write(sockfd, payload, strlen(payload))==-1){
@@ -29,7 +29,7 @@ int msgchannel(int sockfd, const char* channel, const char* message){
   return 0;
 }
 
-int joinchannel(int sockfd, const char* channel, char* output, int length){
+int twlibc_joinchannel(int sockfd, const char* channel, char* output, int length){
   char payload[7+strlen(channel)];
   sprintf(payload, "JOIN %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
@@ -43,7 +43,7 @@ int joinchannel(int sockfd, const char* channel, char* output, int length){
   return 0;
 }
 
-int leavechannel(int sockfd, const char* channel, char* output, int length){
+int twlibc_leavechannel(int sockfd, const char* channel, char* output, int length){
   char payload[7+strlen(channel)];
   sprintf(payload, "PART %s\r\n", channel);
   if(write(sockfd, payload, strlen(payload))==-1){
@@ -58,7 +58,7 @@ int leavechannel(int sockfd, const char* channel, char* output, int length){
 }
 
 
-int sendrawpacket(int sockfd, char* payload){
+int twlibc_sendrawpacket(int sockfd, char* payload){
   int payloadlen = strlen(payload);
   /* 
   if(payload[payloadlen] != '\n' || payload[payloadlen-1] != '\r'){
@@ -71,7 +71,7 @@ int sendrawpacket(int sockfd, char* payload){
   return 1;
 }
 
-int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length){
+int twlibc_setupauth(int sockfd, const char* oauth, const char* nick, char* output, int length){
   char payload[14 + strlen(oauth) + strlen(nick)];
   sprintf(payload, "PASS %s\r\nNICK %s\r\n", oauth, nick);
 
@@ -87,7 +87,7 @@ int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int
   return 0;
 }
 
-char* parseSender(char* message){
+char* twlibc_parseSender(char* message){
   char* name = strtok(message, "!");
   if(name==NULL)
     return NULL;
