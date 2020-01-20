@@ -34,7 +34,7 @@ int main(){
   
   char buffer[1024];
 
-  if(twlibc_setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
+  if(twlibc_setupauth(twitchsock, "oauth:nd5h667zxxc2nzyuphqw9m7p5t8z4i", "botbkamp", buffer, 1024)==-1){
     perror("FATAL: Couldn't authenticate with twitch servers");
   }
   printf("%s", buffer);
