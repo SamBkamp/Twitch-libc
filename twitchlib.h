@@ -84,7 +84,6 @@ int setupauth(int sockfd, const char* oauth, const char* nick, char* output, int
     if(read(sockfd, output, length)==-1){
       return -1;
     }
-    printf("%s", output);
   }
   return 0;
 }
