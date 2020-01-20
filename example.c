@@ -42,13 +42,13 @@ int main(){
   twitchaddr.sin_port = htons(6667);
 
   if(connect(twitchsock, (struct sockaddr*)&twitchaddr, sizeof(twitchaddr)) != 0){
-    perror("FATAL: couldn't connect to server\n");
+    perror("FATAL: couldn't connect to server");
     return 0;
   }
 
   char buffer[1024];
 
-  if(setupauth(twitchsock, "oauth:xyz", "botbkamp", buffer, 1024)==-1){
+  if(setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
     perror("FATAL: Couldn't authenticate with twitch servers");
   }
   printf("%s", buffer);
@@ -65,6 +65,18 @@ int main(){
   }
   printf("%s", buffer);
 
+  char returnString[1024];
+
+  if(read(twitchsock, returnString, sizeof(returnString))==-1){
+    perror("FATAL: couldn't read from twitch socket");
+  }
+
+  printf("%s", returnString);
+
+  char* senderName = parseSender(returnString);
+  printf("parsed name is: %s\n", senderName);
+  free(senderName);
+  
   bzero(buffer, 1024);
   if(leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
