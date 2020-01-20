@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.2                    |
+   |  @version: 0.2.1                  |
    |                                   |  
    +-----------------------------------+
 */
@@ -19,6 +19,29 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+int twlibc_init(){
+  struct sockaddr_in twitchaddr;
+  int twitchsock = socket(AF_INET, SOCK_STREAM, 0);
+  if (twitchsock==-1)
+    return -1;
+  
+  struct hostent* host = gethostbyname("irc.chat.twitch.tv");
+  if(host == NULL)
+    return -1;
+  
+  //setup address
+  bzero(&twitchaddr, sizeof(twitchaddr));
+  twitchaddr.sin_family = AF_INET;
+  twitchaddr.sin_addr.s_addr = *(long *)host->h_addr_list[0];
+  twitchaddr.sin_port = htons(6667);
+
+  if(connect(twitchsock, (struct sockaddr*)&twitchaddr, sizeof(twitchaddr)) != 0)
+    return -1;
+  return twitchsock;
+}
 
 int twlibc_msgchannel(int sockfd, const char* channel, const char* message){
   char payload[12+strlen(channel)+strlen(message)];
