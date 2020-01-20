@@ -9,6 +9,10 @@ To use the functions in this library all you have to include this headerfile lik
 ```
 #include "twitchlib.h"
 ```
+and include the c file at compilation. Eg;
+```bash
+$ gcc -o twlibc example.c twitchlib.c
+```
 
 ## Functions
 
