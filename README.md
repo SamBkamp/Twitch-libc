@@ -14,13 +14,13 @@ To use the functions in this library all you have to include this headerfile lik
 
 currently this library has a couple of callable functions:
 
-- `msgchannel(int sockfd, const char* channel, const char* message)`
+- `twlibc_msgchannel(int sockfd, const char* channel, const char* message)`
 
-- `joinchannel(int sockfd, const char* channel, char output, int length)`
+- `twlibc_joinchannel(int sockfd, const char* channel, char output, int length)`
 
-- `leavechannel(int sockfd, const char* channel, char output, int length)`
+- `twlibc_leavechannel(int sockfd, const char* channel, char output, int length)`
 
-- `setupauth(int sockfd, const char* oauth, const char* nick, const char* output, int length)`
+- `twlibc_setupauth(int sockfd, const char* oauth, const char* nick, const char* output, int length)`
 
 **Note: you can find more details about these methods in the Wiki section**
 
