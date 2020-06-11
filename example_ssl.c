@@ -34,29 +34,16 @@ SSL_CTX* InitCTX(void);
 void ShowCerts(SSL* ssl);
 
 int main(){
-  SSL_CTX *ctx;
-  SSL *ssl;
-  int twitchsock;
   
-  SSL_library_init();
-  ctx = InitCTX();
+  struct twitch_connection* twlibc;
+  twlibc_init(1, twlibc);
 
-  ssl = SSL_new(ctx);
-  twitchsock = twlibc_init(ssl);
-  SSL_set_fd(ssl, twitchsock);
-
-  if (SSL_connect(ssl) == -1){
-    ERR_print_errors_fp(stderr);
+  if(twlibc == 0x0 || twlibc == NULL){
+    printf("lib returned null\n");
     exit(0);
-  }
-  
-  printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
-
-  ShowCerts(ssl);
-  
-  if(twitchsock == -1){
-    perror("FATAL: Couldn't initialise socket");
-    return 0;
+  }else {
+    printf("pogey socket is: %d\n", twlibc->socket);
+    exit(0);
   }
   
   char buffer[1024];
@@ -66,6 +53,7 @@ int main(){
   if(twlibc_setupauth(twitchsock, "oauth:zxh966o7dqsxy78mh5m1xja5jqiybk", "botbkamp", buffer, 1024)==-1){
    perror("FATAL: Couldn't authenticate with twitch servers");
   }
+  
   //  SSL_read(ssl, buffer, 1024);
   
   printf("%s", buffer);
@@ -75,7 +63,7 @@ int main(){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
-
+  /*
   bzero(buffer, 1024);
   if(twlibc_msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
     perror("FATAL: Couldn't send message");
@@ -103,39 +91,5 @@ int main(){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
-  
-}
-
-SSL_CTX* InitCTX(void){
-    SSL_METHOD *method;
-    SSL_CTX *ctx;
-    OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
-    SSL_load_error_strings();   /* Bring in and register error messages */
-    method = TLSv1_2_client_method();  /* Create new client-method instance */
-    ctx = SSL_CTX_new(method);   /* Create new context */
-    if ( ctx == NULL )
-    {
-        ERR_print_errors_fp(stderr);
-        abort();
-    }
-    return ctx;
-}
-
-void ShowCerts(SSL* ssl){
-    X509 *cert;
-    char *line;
-    cert = SSL_get_peer_certificate(ssl); /* get the server's certificate */
-    if ( cert != NULL )
-    {
-        printf("Server certificates:\n");
-        line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
-        printf("Subject: %s\n", line);
-        free(line);       /* free the malloc'ed string */
-        line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
-        printf("Issuer: %s\n", line);
-        free(line);       /* free the malloc'ed string */
-        X509_free(cert);     /* free the malloc'ed certificate copy */
-    }
-    else
-        printf("Info: No client certificates configured.\n");
+  */
 }
