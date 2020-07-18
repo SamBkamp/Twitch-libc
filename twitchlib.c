@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.3.1                  |
+   |  @version: 1.3.1                  |
    |                                   |  
    +-----------------------------------+
 */
@@ -26,20 +26,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 SSL_CTX* InitCTX(void);
 
-typedef struct twitch_connection {
+typedef struct {
   SSL_CTX* ctx;
   SSL* ssl;
   int socket;
+  int usingSSL;
 } twitch_connection;
 
 
-twitch_connection* twlibc_init(int usingSSL, struct twitch_connection* tw_conn){
+twitch_connection* twlibc_init(int usingSSL){ //returns a pointer to a struct that has to be freed
+  twitch_connection *temp;
+  temp = malloc(sizeof(twitch_connection));
   struct sockaddr_in twitchaddr;
   SSL_CTX *ctx;
   SSL *ssl;
   int twitchsock;
   int PORT;
-
+  
   if(usingSSL == 1){
     //using SSL
     SSL_library_init();
@@ -52,19 +55,20 @@ twitch_connection* twlibc_init(int usingSSL, struct twitch_connection* tw_conn){
   
   twitchsock = socket(AF_INET, SOCK_STREAM, 0);
   if (twitchsock==-1)
-    return -1;
+    return NULL;
   
   struct hostent* host = gethostbyname("irc.chat.twitch.tv");
   if(host == NULL)
-    return -1;
-
+    return NULL;
 
   if(usingSSL == 1){
-    ssl_connection = ssl;
     PORT = 6697;
+    temp->usingSSL = 1;
   }else {
     PORT = 6667;
+    temp->usingSSL = 0;
   }
+
   
   //setup address
   bzero(&twitchaddr, sizeof(twitchaddr));
@@ -73,58 +77,61 @@ twitch_connection* twlibc_init(int usingSSL, struct twitch_connection* tw_conn){
   twitchaddr.sin_port = htons(PORT);
 
   if(connect(twitchsock, (struct sockaddr*)&twitchaddr, sizeof(twitchaddr)) != 0)
-    return -1;
+    return NULL;
 
-  if(usingSSL == 1)
+  if(usingSSL == 1){
     SSL_set_fd(ssl, twitchsock);
-  
-  if (SSL_connect(ssl) == -1)
-    return -1;
-  
-  if(usingSSL == 0){
-    //not using SSL
-    tw_conn->ctx = NULL;
-    tw_conn->ssl = NULL;
-  }else {
-    //using SSL
-    tw_conn->ctx = ctx;
-    tw_conn->ssl = ssl;
+    if (SSL_connect(ssl) == -1)
+      return NULL;
   }
   
-  tw_conn->socket = twitchsock;
+    
+  if(usingSSL == 0){
+    //not using SSL
+    temp->ctx = NULL;
+    temp->ssl = NULL;
+  }else {
+    //using SSL
+    temp->ctx = ctx;
+    temp->ssl = ssl;
+  }
+  
+  temp->socket = twitchsock;
+  
+  return temp;
 }
 
-int twlibc_msgchannel(int sockfd, const char* channel, const char* message){
+int twlibc_msgchannel(twitch_connection* twlibc, const char* channel, const char* message){
   char payload[12+strlen(channel)+strlen(message)];
   sprintf(payload, "PRIVMSG %s :%s\r\n", channel, message);
-  if(usingSSL == 0){
-    return write(sockfd, payload, strlen(payload));
+  if(twlibc->ssl == NULL){
+    return write(twlibc->socket, payload, strlen(payload));
   }else{
-    return SSL_write(tw_conn->ssl, payload, strlen(payload));
+    return SSL_write(twlibc->ssl, payload, strlen(payload));
   }
   return 0;
 }
 
-int twlibc_joinchannel(struct twitch_connection* tw_conn, const char* channel, char* output, int length){
+int twlibc_joinchannel(twitch_connection* twlibc, const char* channel, char* output, int length){
   char payload[7+strlen(channel)];
   sprintf(payload, "JOIN %s\r\n", channel);
-  if(tw_conn->ssl == NULL){
+  if(twlibc->ssl == NULL){
     //not using SSL
-    if(write(sockfd, payload, strlen(payload))==-1){
+    if(write(twlibc->socket, payload, strlen(payload))==-1){
       return -1;
     }    
     if(output != NULL){
-      if(read(sockfd, output, length)==-1){
+      if(read(twlibc->socket, output, length)==-1){
 	return -1;
       }
     }
   }else{
     //using SSL
-    if(SSL_write(tw_conn->ssl, payload, strlen(payload))==-1){
+    if(SSL_write(twlibc->ssl, payload, strlen(payload))==-1){
       return -1;
     }
     if(output != NULL){
-      if(SSL_read(tw_conn->ssl, output, length)==-1){
+      if(SSL_read(twlibc->ssl, output, length)==-1){
 	return -1;
       }
     }
@@ -132,56 +139,75 @@ int twlibc_joinchannel(struct twitch_connection* tw_conn, const char* channel, c
   return 0;
 }
 
-int twlibc_leavechannel(int sockfd, const char* channel, char* output, int length){
+int twlibc_leavechannel(twitch_connection* twlibc, const char* channel, char* output, int length){
   char payload[7+strlen(channel)];
   sprintf(payload, "PART %s\r\n", channel);
-  if(write(sockfd, payload, strlen(payload))==-1){
-    return -1;
-  }
-  if(output != NULL){
-    if(read(sockfd, output, length)==-1){
+  if(twlibc->ssl == NULL){
+    //not using SSL
+    if(write(twlibc->socket, payload, strlen(payload))==-1){
       return -1;
+    }    
+    if(output != NULL){
+      if(read(twlibc->socket, output, length)==-1){
+	return -1;
+      }
+    }
+  }else{
+    //using SSL
+    if(SSL_write(twlibc->ssl, payload, strlen(payload))==-1){
+      return -1;
+    }
+    if(output != NULL){
+      if(SSL_read(twlibc->ssl, output, length)==-1){
+	return -1;
+      }
     }
   }
   return 0;
 }
 
 
-int twlibc_sendrawpacket(int sockfd, char* payload){
+int twlibc_sendrawpacket(twitch_connection* twlibc, char* payload){
+  /*
   int payloadlen = strlen(payload);
-  /* 
+   
   if(payload[payloadlen] != '\n' || payload[payloadlen-1] != '\r'){
     strcat(payload, "\r\n");
   }
   */
-  if(usingSSL == 1){
-    return SSL_write(tw_conn->ssl, payload, strlen(payload));
+  if((int)twlibc->usingSSL == 1){
+    return SSL_write(twlibc->ssl, payload, strlen(payload));
   }else {
-    if(write(sockfd, payload, strlen(payload))==-1){
+    if(write(twlibc->socket, payload, strlen(payload))==-1){
       return -1;
     }
   }
   return 1;
 }
 
-int twlibc_setupauth(struct twitch_connection* tw_conn, const char* oauth, const char* nick, char* output, int length){
+int twlibc_setupauth(twitch_connection* twlibc,
+		     const char* oauth,
+		     const char* nick,
+		     char* output,
+		     int length)
+{
   char payload[14 + strlen(oauth) + strlen(nick)];
   sprintf(payload, "PASS %s\r\nNICK %s\r\n", oauth, nick);
 
-  if(tw_conn->ssl != NULL){
+  if(twlibc->usingSSL == 1){
     //using SSL
-    return SSL_write(tw_conn->ssl, payload, strlen(payload)); 
+    return SSL_write(twlibc->ssl, payload, strlen(payload)); 
   }else {
     //not using SSL
-    return write(sockfd, payload, strlen(payload)); 
+    return write(twlibc->socket, payload, strlen(payload)); 
   }
    
   if(output!=NULL){
-    if(tw_conn->ssl == NULL){
+    if(twlibc->usingSSL == 0){
       //not using SSL
-      return read(sockfd, output, length);
+      return read(twlibc->socket, output, length);
     }else {
-      return SSL_read(tw_conn->ssl, output, length);
+      return SSL_read(twlibc->ssl, output, length);
     }
   }
   return 0;
@@ -199,26 +225,28 @@ char* twlibc_parseSender(char* message){
   return parsedName;
 }
 
-int twlibc_whisper(struct twitch_connection tw_conn, const char* user, const char* message, const char* channel){
+int twlibc_whisper(twitch_connection* twlibc,
+		   const char* user,
+		   const char* message,
+		   const char* channel){
   char buffer[16 + strlen(channel) + strlen(user) + strlen(message)];
   sprintf(buffer, "PRIVMSG %s :/w %s %s\r\n", channel, user, message);
-  if(tw_conn->ssl != NULL){
-    return SSL_write(tw_conn->ssl, buffer, strlen(buffer));
+  if(twlibc->ssl != NULL){
+    return SSL_write(twlibc->ssl, buffer, strlen(buffer));
   }else {
-    return write(sockfd, buffer, strlen(buffer));
+    return write(twlibc->socket, buffer, strlen(buffer));
   }
 }
 
 
 
 SSL_CTX* InitCTX(void){
-    SSL_METHOD *method;
-    SSL_CTX *ctx;
-    OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
-    SSL_load_error_strings();   /* Bring in and register error messages */
-    method = TLSv1_2_client_method();  /* Create new client-method instance */
-    ctx = SSL_CTX_new(method);   /* Create new context */
-    if ( ctx == NULL )
+  SSL_METHOD *tls_method = TLS_client_method();   // Create new client-method instance 
+  SSL_CTX *ctx;
+  OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
+  SSL_load_error_strings();   /* Bring in and register error */ 
+  ctx = SSL_CTX_new(tls_method);   /* Create new context */
+  if ( ctx == NULL )
     {
         ERR_print_errors_fp(stderr);
         abort();

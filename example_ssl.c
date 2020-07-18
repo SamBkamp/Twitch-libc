@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.2                    |
+   |  @version: 1.2                    |
    |                                   |  
    +-----------------------------------+
 */
@@ -28,51 +28,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <malloc.h>
 #include <errno.h>
 
-//prototypes
-int OpenConnection(const char *hostname, int port);
-SSL_CTX* InitCTX(void);
-void ShowCerts(SSL* ssl);
-
 int main(){
   
-  struct twitch_connection* twlibc;
-  twlibc_init(1, twlibc);
+  twitch_connection* twlibc = twlibc_init(1);
 
-  if(twlibc == 0x0 || twlibc == NULL){
-    printf("lib returned null\n");
-    exit(0);
-  }else {
-    printf("pogey socket is: %d\n", twlibc->socket);
-    exit(0);
-  }
+  
+  printf("pogey socket is: %d\n", twlibc->socket);
   
   char buffer[1024];
-
-  //SSL_write(ssl, "PASS oauth:zxh966o7dqsxy78mh5m1xja5jqiybk\r\nNICK botbkamp\r\n", 31);
   
-  if(twlibc_setupauth(twitchsock, "oauth:zxh966o7dqsxy78mh5m1xja5jqiybk", "botbkamp", buffer, 1024)==-1){
-   perror("FATAL: Couldn't authenticate with twitch servers");
+  if(twlibc_setupauth(twlibc, "oauth:n0l34ks", "botbkamp", buffer, 1024)==-1){
+    perror("FATAL: Couldn't authenticate with twitch servers");
   }
   
-  //  SSL_read(ssl, buffer, 1024);
+  SSL_read(twlibc->ssl, buffer, 1024);
   
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(twlibc_joinchannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_joinchannel(twlibc, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
-  /*
+  
   bzero(buffer, 1024);
-  if(twlibc_msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
+  if(twlibc_msgchannel(twlibc, "#bkamp_", "This bot is being tested")==-1){
     perror("FATAL: Couldn't send message");
   }
   printf("%s", buffer);
 
   char returnString[1024];
 
-  if(SSL_read(ssl, returnString, sizeof(returnString))==-1){
+  if(SSL_read(twlibc->ssl, returnString, sizeof(returnString))==-1){
     perror("FATAL: couldn't read from twitch socket");
   }
 
@@ -82,14 +69,14 @@ int main(){
   printf("parsed name is: %s\n", senderName);
   free(senderName);
 
-  if(twlibc_whisper(twitchsock, "Bkamp_", "test", "#bkamp_") == -1){
+  if(twlibc_whisper(twlibc, "Bkamp_", "test", "#bkamp_") == -1){
     perror("FATAL: couldn't whisper");
   }
   
   bzero(buffer, 1024);
-  if(twlibc_leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
-    perror("FATAL: Couldn't join server");
+  if(twlibc_leavechannel(twlibc, "#bkamp_", buffer, 1024)==-1){
+    perror("FATAL: Couldn't leave server");
   }
   printf("%s", buffer);
-  */
+  
 }
