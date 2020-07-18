@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.2                    |
+   |  @version: 1.2                    |
    |                                   |  
    +-----------------------------------+
 */
@@ -25,35 +25,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 int main(){
 
-  int twitchsock = twlibc_init();
+  twitch_connection* twlibc = twlibc_init(0);
 
-  if(twitchsock == -1){
+  if(twlibc->socket == -1){
     perror("FATAL: Couldn't initialise socket");
     return 0;
   }
   
   char buffer[1024];
 
-  if(twlibc_setupauth(twitchsock, "oauth:xys", "botbkamp", buffer, 1024)==-1){
+  if(twlibc_setupauth(twlibc, "oauth:xys", "botbkamp", buffer, 1024)==-1){
     perror("FATAL: Couldn't authenticate with twitch servers");
   }
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(twlibc_joinchannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_joinchannel(twlibc, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(twlibc_msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
+  if(twlibc_msgchannel(twlibc, "#bkamp_", "HeyGuys")==-1){
     perror("FATAL: Couldn't send message");
   }
   printf("%s", buffer);
 
   char returnString[1024];
 
-  if(read(twitchsock, returnString, sizeof(returnString))==-1){
+  if(read(twlibc->socket, returnString, sizeof(returnString))==-1){
     perror("FATAL: couldn't read from twitch socket");
   }
 
@@ -63,12 +63,12 @@ int main(){
   printf("parsed name is: %s\n", senderName);
   free(senderName);
 
-  if(twlibc_whisper(twitchsock, "Bkamp_", "test", "#bkamp_") == -1){
+  if(twlibc_whisper(twlibc, "Bkamp_", "test", "#bkamp_") == -1){
     perror("FATAL: couldn't whisper");
   }
   
   bzero(buffer, 1024);
-  if(twlibc_leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_leavechannel(twlibc, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);

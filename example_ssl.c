@@ -10,7 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    |                                   | 
    |  @author: sam@bonnekamp.net       |
    |                                   |
-   |  @version: 0.2                    |
+   |  @version: 1.2                    |
    |                                   |  
    +-----------------------------------+
 */
@@ -28,63 +28,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <malloc.h>
 #include <errno.h>
 
-//prototypes
-int OpenConnection(const char *hostname, int port);
-SSL_CTX* InitCTX(void);
-void ShowCerts(SSL* ssl);
-
 int main(){
-  SSL_CTX *ctx;
-  SSL *ssl;
-  int twitchsock;
   
-  SSL_library_init();
-  ctx = InitCTX();
+  twitch_connection* twlibc = twlibc_init(1);
 
-  ssl = SSL_new(ctx);
-  twitchsock = twlibc_init(ssl);
-  SSL_set_fd(ssl, twitchsock);
-
-  if (SSL_connect(ssl) == -1){
-    ERR_print_errors_fp(stderr);
-    exit(0);
-  }
   
-  printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
-
-  ShowCerts(ssl);
-  
-  if(twitchsock == -1){
-    perror("FATAL: Couldn't initialise socket");
-    return 0;
-  }
+  printf("pogey socket is: %d\n", twlibc->socket);
   
   char buffer[1024];
-
-  //SSL_write(ssl, "PASS oauth:zxh966o7dqsxy78mh5m1xja5jqiybk\r\nNICK botbkamp\r\n", 31);
   
-  if(twlibc_setupauth(twitchsock, "oauth:zxh966o7dqsxy78mh5m1xja5jqiybk", "botbkamp", buffer, 1024)==-1){
-   perror("FATAL: Couldn't authenticate with twitch servers");
+  if(twlibc_setupauth(twlibc, "oauth:n0l34ks", "botbkamp", buffer, 1024)==-1){
+    perror("FATAL: Couldn't authenticate with twitch servers");
   }
-  //  SSL_read(ssl, buffer, 1024);
+  
+  SSL_read(twlibc->ssl, buffer, 1024);
   
   printf("%s", buffer);
 
   bzero(buffer, 1024);
-  if(twlibc_joinchannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
+  if(twlibc_joinchannel(twlibc, "#bkamp_", buffer, 1024)==-1){
     perror("FATAL: Couldn't join server");
   }
   printf("%s", buffer);
-
+  
   bzero(buffer, 1024);
-  if(twlibc_msgchannel(twitchsock, "#bkamp_", "HeyGuys")==-1){
+  if(twlibc_msgchannel(twlibc, "#bkamp_", "This bot is being tested")==-1){
     perror("FATAL: Couldn't send message");
   }
   printf("%s", buffer);
 
   char returnString[1024];
 
-  if(SSL_read(ssl, returnString, sizeof(returnString))==-1){
+  if(SSL_read(twlibc->ssl, returnString, sizeof(returnString))==-1){
     perror("FATAL: couldn't read from twitch socket");
   }
 
@@ -94,48 +69,14 @@ int main(){
   printf("parsed name is: %s\n", senderName);
   free(senderName);
 
-  if(twlibc_whisper(twitchsock, "Bkamp_", "test", "#bkamp_") == -1){
+  if(twlibc_whisper(twlibc, "Bkamp_", "test", "#bkamp_") == -1){
     perror("FATAL: couldn't whisper");
   }
   
   bzero(buffer, 1024);
-  if(twlibc_leavechannel(twitchsock, "#bkamp_", buffer, 1024)==-1){
-    perror("FATAL: Couldn't join server");
+  if(twlibc_leavechannel(twlibc, "#bkamp_", buffer, 1024)==-1){
+    perror("FATAL: Couldn't leave server");
   }
   printf("%s", buffer);
   
-}
-
-SSL_CTX* InitCTX(void){
-    SSL_METHOD *method;
-    SSL_CTX *ctx;
-    OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
-    SSL_load_error_strings();   /* Bring in and register error messages */
-    method = TLSv1_2_client_method();  /* Create new client-method instance */
-    ctx = SSL_CTX_new(method);   /* Create new context */
-    if ( ctx == NULL )
-    {
-        ERR_print_errors_fp(stderr);
-        abort();
-    }
-    return ctx;
-}
-
-void ShowCerts(SSL* ssl){
-    X509 *cert;
-    char *line;
-    cert = SSL_get_peer_certificate(ssl); /* get the server's certificate */
-    if ( cert != NULL )
-    {
-        printf("Server certificates:\n");
-        line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
-        printf("Subject: %s\n", line);
-        free(line);       /* free the malloc'ed string */
-        line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
-        printf("Issuer: %s\n", line);
-        free(line);       /* free the malloc'ed string */
-        X509_free(cert);     /* free the malloc'ed certificate copy */
-    }
-    else
-        printf("Info: No client certificates configured.\n");
 }
