@@ -21,7 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include "twitchlib.h"
+#include "../twitchlib.h"
 
 int main(){
 
